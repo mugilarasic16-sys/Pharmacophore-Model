@@ -1,0 +1,8 @@
+
+streamlit
+rdkit
+biopython
+numpy
+pandas
+scikit-learn
+reportlab
