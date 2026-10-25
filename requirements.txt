@@ -1,8 +1,10 @@
-
 streamlit
 rdkit
 biopython
-numpy
-pandas
 scikit-learn
+scipy
+pandas
+numpy
+requests
 reportlab
+py3Dmol
