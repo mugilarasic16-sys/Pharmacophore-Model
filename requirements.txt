@@ -6,5 +6,4 @@ scipy
 pandas
 numpy
 requests
-reportlab
 py3Dmol
