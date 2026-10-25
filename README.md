@@ -1,51 +1,37 @@
-# General Pharmacophore Modelling Platform
+# Pharmacophore Generator
 
-A research prototype for target-based and ligand-based
-pharmacophore feature analysis.
+Builds pharmacophore MODELS (not just feature tables) and validates them.
 
-## Features
+## Files
+- `app.py`          Streamlit interface
+- `pharmacore.py`   Pipelines: ligand-based, target-based, screening/validation, export
+- `geometry.py`     Kabsch fit, consensus clustering, 3D matching, EF (numpy/scipy only)
+- `rcsb.py`         RCSB download, ligand detection, ligand pose preparation
+- `test_geometry.py` Synthetic-data tests for geometry.py (`python test_geometry.py`)
 
-### Target-based
-- Input by PDB ID, UniProt accession, or an uploaded complex file
-  (PDB or mmCIF). No separate ligand file is needed.
-- Automatic download from RCSB PDB and automatic detection of bound
-  ligands (water, buffers, ions and glycans filtered out; filter is optional)
-- Ligand bond orders restored from the RCSB chemical-component template
-- Pharmacophore feature detection on the crystallographic pose
-- Candidate interaction labels, contacting residues and pocket residue list
-- Interactive 3D view, CSV and SDF export, PDF report
+## Ligand-based pipeline
+CSV (smiles, activity) -> scaffold split -> ETKDGv3 conformers -> Crippen-O3A
+alignment of actives to a rigid reference -> common-feature clustering
+-> model -> validation on held-out new-scaffold actives vs inactives.
 
-### Ligand-based
-- Upload a CSV with `smiles` and `activity` columns
-- Duplicate and conflicting structures removed before modelling
-- User-selected positive class
-- 2D feature-count Random Forest with held-out test evaluation
-- CSV export and PDF report
+## Target-based pipeline
+PDB IDs or UniProt -> download -> auto-detect ligand -> keep only features that
+interact with the protein -> superimpose complexes on the pocket -> consensus
+features + exclusion volumes -> model -> optional validation.
 
-## Run locally
-
-Install dependencies:
-
+## Run
     pip install -r requirements.txt
-
-Launch:
-
     streamlit run app.py
+Internet is required for the target-based workflow.
 
-An internet connection is required for the target-based workflow
-(RCSB PDB is queried live).
-
-## Scientific limitations
-- Target-based results come from a single complex. Interaction labels are
-  distance-based candidates only; waters, metals and cofactors are not
-  considered, and only the first model of NMR entries is used.
-- Apo structures (no bound ligand) cannot be analysed.
-- If ligand template matching fails (for example, missing atoms in the
-  crystal structure), connectivity is distance-based and aromatic or
-  ionisable features may be incomplete. The app shows a warning.
-- The ligand-based workflow is a 2D feature-based baseline classifier,
-  not a full 3D common-feature pharmacophore engine. A random split can
-  overestimate performance for congeneric series.
-
-Generated hypotheses require independent validation (for example decoy
-sets with ROC and enrichment analysis) before any scientific claim.
+## Known limitations
+- Features are points with a tolerance radius. No directionality for H-bonds
+  or aromatic ring normals.
+- Ligand-based alignment uses Crippen-O3A (atom-type/shape based), not a
+  feature-based alignment, and assumes the actives share one binding mode.
+- Charge/protonation states come from the input SMILES.
+- Target-based interaction rules are distance-based; waters, metals and
+  cofactors are ignored.
+- Validation numbers from small datasets are noisy. Use property-matched
+  decoys (e.g. DUD-E style) or confirmed inactives, never random molecules
+  of different size.
